@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -38,7 +39,7 @@ namespace Json {
         public static explicit operator JToken(bool v) => new JValue(v);
     }
 
-    public class JObject : JToken {
+    public class JObject : JToken, IEnumerable<JPair> {
         List<JPair> _pairs = new List<JPair>();
 
         public void Add(string key, JToken token) {
@@ -98,6 +99,9 @@ namespace Json {
             }
         }
 
+        public IEnumerator<JPair> GetEnumerator() => _pairs.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => _pairs.GetEnumerator();
+
         public override void ToString(StringBuilder sb, int indent, out bool nl) {
             sb.Append("{");
             indent += 1;
@@ -139,7 +143,7 @@ namespace Json {
         }
     }
 
-    public class JArray : JToken {
+    public class JArray : JToken, IEnumerable<JToken> {
         List<JToken> _elements = new List<JToken>();
 
         public void Add(JToken element) {
@@ -192,6 +196,9 @@ namespace Json {
             sb.Append("]");
             nl = true;
         }
+
+        public IEnumerator<JToken> GetEnumerator() => _elements.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => _elements.GetEnumerator();
 
         public static JArray Parse(string json) {
             using (var r = new StringReader(json)) {
