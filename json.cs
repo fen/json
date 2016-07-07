@@ -49,6 +49,17 @@ namespace Json {
             _pairs.Add(new JPair(key, token));
         }
 
+        public bool TryGetValue(string key, out JToken value) {
+            foreach (var pair in _pairs) {
+                if (pair.Key.Equals(key, StringComparison.Ordinal) == true) {
+                    value = pair.Value;
+                    return true;
+                }
+            }
+            value = null;
+            return false;
+        }
+
         public bool Contains(string key) {
             foreach (var pair in _pairs) {
                 if (pair.Key.Equals(key, StringComparison.Ordinal) == true) {
@@ -57,7 +68,6 @@ namespace Json {
             }
             return false;
         }
-
 
         public JToken this[string key] {
             get {
