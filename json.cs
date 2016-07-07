@@ -576,11 +576,6 @@ namespace Json {
             }
         }
 
-        // members
-        //   pair
-        //   pair , members
-        // pair
-        //   string : value
         public static Result<JToken> TObject(TextReader reader, StringBuilder sb) {
             var obj = new JObject();
 
@@ -603,13 +598,12 @@ namespace Json {
 
                 c = reader.Read();
                 if (c != (int)':') {
-                    return JError.ExpectedJPairSepartor; // @TODO error
+                    return JError.ExpectedJPairSepartor;
                 }
 
                 WS(reader);
                 if (r.Failed) return r.ErrorCode;
 
-                // This should run the Tokenizer
                 var value = ParseJSON(reader, sb);
                 if (value.Failed == true) {
                     return value.ErrorCode;
