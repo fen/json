@@ -174,17 +174,27 @@ namespace Json {
             nl = true;
         }
 
-        public static JObject Parse(string json) {
+        public static Result<JObject> Parse(string json) {
             using (var r = new StringReader(json)) {
                 var sb = new StringBuilder();
-                return (JObject)Tokenizer(r, sb);
+                var res = ParseJSON(r, sb);
+                if (res.Failed) return res.ErrorCode;
+                if (res.Value is JObject == false) {
+                    return JError.WasNotExpectedResultTypeJObject;
+                }
+                return (JObject)res.Value;
             }
         }
 
-        public static JObject Parse(Stream stream) {
+        public static Result<JObject> Parse(Stream stream) {
             var r = new StreamReader(stream);
             var sb = new StringBuilder();
-            return (JObject)Tokenizer(r, sb);
+            var res = ParseJSON(r, sb);
+            if (res.Failed) return res.ErrorCode;
+            if (res.Value is JObject == false) {
+                return JError.WasNotExpectedResultTypeJObject;
+            }
+            return (JObject)res.Value;
         }
     }
 
@@ -248,17 +258,27 @@ namespace Json {
         public IEnumerator<JToken> GetEnumerator() => _elements.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => _elements.GetEnumerator();
 
-        public static JArray Parse(string json) {
+        public static Result<JArray> Parse(string json) {
             using (var r = new StringReader(json)) {
                 var sb = new StringBuilder();
-                return (JArray)Tokenizer(r, sb);
+                var res = ParseJSON(r, sb);
+                if (res.Failed) return res.ErrorCode;
+                if (res.Value is JArray == false) {
+                    return JError.WasNotExpectedResultTypeJArray;
+                }
+                return (JArray)res.Value;
             }
         }
 
-        public static JArray Parse(Stream stream) {
+        public static Result<JArray> Parse(Stream stream) {
             var r = new StreamReader(stream);
             var sb = new StringBuilder();
-            return (JArray)Tokenizer(r, sb);
+            var res = ParseJSON(r, sb);
+            if (res.Failed) return res.ErrorCode;
+            if (res.Value is JArray == false) {
+                return JError.WasNotExpectedResultTypeJArray;
+            }
+            return (JArray)res.Value;
         }
     }
 
@@ -337,17 +357,77 @@ namespace Json {
         public static explicit operator JValue(bool v) => new JValue(v);
     }
 
+    public struct Result {
+        public static Result Success = new Result(0);
+        int _errorCode;
+        public Result(int errorCode) {
+            _errorCode = errorCode;
+        }
+
+        public int ErrorCode => _errorCode;
+        public bool Failed => _errorCode != 0;
+
+        public Result<T> Ok<T>(T result) {
+            return new Result<T>(result);
+        }
+
+        public static implicit operator Result(int e) {
+            return new Result(e);
+        }
+    }
+
+    public struct Result<T> {
+        T _value;
+        int _errorCode;
+        public Result(T value) {
+            _value = value;
+            _errorCode = 0;
+        }
+        public Result(int errorCode) {
+            _value = default(T);
+            _errorCode = errorCode;
+        }
+
+        public T Value => _value;
+
+        public int ErrorCode => _errorCode;
+
+        public bool Failed => _errorCode != 0;
+
+        public static implicit operator Result<T>(T value) {
+            return new Result<T>(value);
+        }
+
+        public static implicit operator Result<T>(int e) {
+            return new Result<T>(e);
+        }
+    }
+
+    public static class JError {
+        public const int ExpectedBoolTrue = 1;
+        public const int ExpectedBoolFalse = 2;
+        public const int ExpectedNull= 3;
+        public const int MalformedJson = 4;
+        public const int MalformedNumber = 5;
+        public const int ExpectedJPairSepartor = 6;
+        public const int UnexpectedEnd = 7;
+        public const int ExpectedStringStartWithDoubleQuote = 8;
+        public const int WasNotExpectedResultTypeJArray = 9;
+        public const int WasNotExpectedResultTypeJObject = 10;
+    }
+
     static class JSONImpl {
         // Caller is responsible for disposing the TextReader.
         // TextReader must support seeking (Peek)
-        public static JToken Tokenizer(TextReader reader, StringBuilder sb) {
-            WS(reader);
+        public static Result<JToken> ParseJSON(TextReader reader, StringBuilder sb) {
+            var r = WS(reader);
+            if (r.Failed) return r.ErrorCode;
 
             int c = reader.Peek();
             while (c != -1) {
                 switch (c) {
                     case '{': {
-                        return TObject(reader, sb); 
+                        return TObject(reader, sb);
                     }
                     case '[': {
                         return TArray(reader, sb);
@@ -358,33 +438,33 @@ namespace Json {
                     case 't': {
                         c = reader.Read();
                         c = reader.Read();
-                        if (c != (int)'r') return null; // @TODO ERROR
+                        if (c != (int)'r') return JError.ExpectedBoolTrue;
                         c = reader.Read();
-                        if (c != (int)'u') return null; // @TODO ERROR
+                        if (c != (int)'u') return JError.ExpectedBoolTrue;
                         c = reader.Read();
-                        if (c != (int)'e') return null; // @TODO ERROR
+                        if (c != (int)'e') return JError.ExpectedBoolTrue;
                         return new JValue(true);
                     }
                     case 'f': {
                         c = reader.Read();
                         c = reader.Read();
-                        if (c != (int)'a') return null;
+                        if (c != (int)'a') return JError.ExpectedBoolFalse;
                         c = reader.Read();
-                        if (c != (int)'l') return null;
+                        if (c != (int)'l') return JError.ExpectedBoolFalse;
                         c = reader.Read();
-                        if (c != (int)'s') return null;
+                        if (c != (int)'s') return JError.ExpectedBoolFalse;
                         c = reader.Read();
-                        if (c != (int)'e') return null;
+                        if (c != (int)'e') return JError.ExpectedBoolFalse;
                         return new JValue(false);
                     }
                     case 'n': {
                         c = reader.Read();
                         c = reader.Read();
-                        if (c != (int)'u') return null;
+                        if (c != (int)'u') return JError.ExpectedNull;
                         c = reader.Read();
-                        if (c != (int)'l') return null;
+                        if (c != (int)'l') return JError.ExpectedNull;
                         c = reader.Read();
-                        if (c != (int)'l') return null;
+                        if (c != (int)'l') return JError.ExpectedNull;
                         return new JValue(null);
                     }
                     case '-':
@@ -395,31 +475,40 @@ namespace Json {
                         Comment(reader);
                     }
                     break;
+                    default:
+                        return JError.MalformedJson;
                 }
-                WS(reader);
+
+                r = WS(reader);
+                if (r.Failed) return r.ErrorCode;
                 c = reader.Read();
             }
 
-            return null;
+            return JError.MalformedJson;
         }
 
-        public static void WS(TextReader reader) {
+        // eat all white space and comments
+        static Result WS(TextReader reader) {
             for (;;) {
                 int c = reader.Peek();
                 if (c == (int)' ' || c == (int)'\n' || c == (int)'\r') {
                     c = reader.Read();
                 }
                 else if (c == '/') {
-                    Comment(reader);
+                    var r = Comment(reader);
+                    if (r.Failed == true) {
+                        return r.ErrorCode;
+                    }
                 }
                 else {
                     break;
                 }
             }
-
+            return Result.Success;
         }
 
-        static void Comment(TextReader reader) {
+        // read both C line comments and C multi line comments
+        static Result Comment(TextReader reader) {
             reader.Read();
             int c = reader.Peek();
             if (c == (int)'/') {
@@ -446,10 +535,14 @@ namespace Json {
                     }
                 }
             }
-            else return; // @TODO ERROR
+            else return JError.MalformedJson;
+
+            if (c == -1) return JError.UnexpectedEnd;
+
+            return Result.Success;
         }
 
-        static JValue TNumber(TextReader reader, StringBuilder sb) {
+        static Result<JToken> TNumber(TextReader reader, StringBuilder sb) {
             sb.Clear();
 
             bool isFrac = false;
@@ -465,11 +558,21 @@ namespace Json {
             } while ((c >= (int)'0' && c <= (int)'9') ||
                      c == (int)'e' || c == (int)'E' || c == (int)'-' || c == (int)'+' || c == (int)'.');
 
+            if (c == -1) return JError.UnexpectedEnd;
+
             if (isFrac) {
-                return new JValue(double.Parse(sb.ToString()));
+                double value;
+                if (double.TryParse(sb.ToString(), out value) == false) {
+                    return JError.MalformedNumber;
+                }
+                return new JValue(value);
             }
             else {
-                return new JValue(int.Parse(sb.ToString()));
+                int value;
+                if (int.TryParse(sb.ToString(), out value) == false) {
+                    return JError.MalformedNumber;
+                }
+                return new JValue(value);
             }
         }
 
@@ -478,58 +581,76 @@ namespace Json {
         //   pair , members
         // pair
         //   string : value
-        public static JObject TObject(TextReader reader, StringBuilder sb) {
+        public static Result<JToken> TObject(TextReader reader, StringBuilder sb) {
             var obj = new JObject();
 
             int c = reader.Read(); // {
 
-            WS(reader);
+            var r = WS(reader);
+            if (r.Failed) return r.ErrorCode;
             c = reader.Peek();
             while (c != -1 && c != (int)'}') {
-                WS(reader);
+                r = WS(reader);
+                if (r.Failed) return r.ErrorCode;
+
                 TString(reader, sb);
+                if (r.Failed) return r.ErrorCode;
+
                 string key = sb.ToString();
 
-                WS(reader);
+                r = WS(reader);
+                if (r.Failed) return r.ErrorCode;
 
                 c = reader.Read();
                 if (c != (int)':') {
-                    Console.WriteLine($"ERROR: {(char)c}");
-                    return null; // @TODO error
+                    return JError.ExpectedJPairSepartor; // @TODO error
                 }
 
                 WS(reader);
+                if (r.Failed) return r.ErrorCode;
 
                 // This should run the Tokenizer
-                var value = Tokenizer(reader, sb);
+                var value = ParseJSON(reader, sb);
+                if (value.Failed == true) {
+                    return value.ErrorCode;
+                }
 
-                obj.Add(key, value);
+                obj.Add(key, value.Value);
 
-                WS(reader);
+                r = WS(reader);
+                if (r.Failed) return r.ErrorCode;
+
                 c = reader.Peek();
 
                 if (c == (int)',') {
                     c = reader.Read();
                 }
             }
+
+            if (c == -1) return JError.UnexpectedEnd;
 
             reader.Read(); // }
 
             return obj;
         }
 
-        static JArray TArray(TextReader reader, StringBuilder sb) {
+        static Result<JToken> TArray(TextReader reader, StringBuilder sb) {
             var arr = new JArray();
 
             int c = reader.Read(); // [
 
-            WS(reader);
+            var r = WS(reader);
+            if (r.Failed) return r.ErrorCode;
+
             c = reader.Peek();
             while (c != -1 && c != (int)']') {
                 WS(reader);
-                var element = Tokenizer(reader, sb);
-                arr.Add(element);
+                if (r.Failed) return r.ErrorCode;
+                var element = ParseJSON(reader, sb);
+                if (element.Failed) return element.ErrorCode;
+                arr.Add(element.Value);
                 WS(reader);
+                if (r.Failed) return r.ErrorCode;
                 c = reader.Peek();
 
                 if (c == (int)',') {
@@ -537,13 +658,16 @@ namespace Json {
                 }
             }
 
+            if (c == -1) return JError.UnexpectedEnd;
+
             reader.Read(); // ]
 
             return arr;
         }
 
-        public static JValue TStringOrDate(TextReader reader, StringBuilder sb) {
-            TString(reader, sb);
+        public static Result<JToken> TStringOrDate(TextReader reader, StringBuilder sb) {
+            var r = TString(reader, sb);
+            if (r.Failed) return r.ErrorCode;
 
             var str = sb.ToString();
 
@@ -556,12 +680,12 @@ namespace Json {
             }
         }
 
-        public static void TString(TextReader reader, StringBuilder sb) {
+        public static Result TString(TextReader reader, StringBuilder sb) {
             sb.Clear();
 
             int c = reader.Peek();
             if (c != (int)'"') {
-                return; // @TODO error
+                return JError.ExpectedStringStartWithDoubleQuote;
             }
 
             reader.Read(); // eat the "
@@ -570,18 +694,18 @@ namespace Json {
                 sb.Append((char)c);
                 c = reader.Read();
             }
+
+            if (c == -1) return JError.UnexpectedEnd;
+
+            return Result.Success;
         }
 
         public const string IsoDateFormat = "yyyy-MM-ddTHH:mm:ss.FFFFFFFK";
 
-        static bool TryParseDateTime(string s, out DateTime dt)
-        {
-            if (s.Length > 0)
-            {
-                if (s.Length >= 19 && s.Length <= 40 && char.IsDigit(s[0]) && s[10] == 'T')
-                {
-                    if (DateTime.TryParseExact(s, IsoDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out dt))
-                    {
+        static bool TryParseDateTime(string s, out DateTime dt) {
+            if (s.Length > 0) {
+                if (s.Length >= 19 && s.Length <= 40 && char.IsDigit(s[0]) && s[10] == 'T') {
+                    if (DateTime.TryParseExact(s, IsoDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out dt)) {
                         return true;
                     }
                 }

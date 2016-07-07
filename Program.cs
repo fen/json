@@ -15,13 +15,16 @@ namespace ConsoleApplication
             //var x = new StringReader("{ \"HelloWorld\" : \"foo\", \"A\" : true, \"B\" : false, \"C\" : null }");
             var sw = new Stopwatch();
             sw.Start();
-            var o = JObject.Parse(File.OpenRead("test.json"));
+            var o = JObject.Parse(File.OpenRead("model.json"));
+            if (o.Failed) {
+                Console.WriteLine("ERROR");
+            }
             //bool uoi = (bool)o["ActionByObject"]["@unitOfInformation"];
             //Console.WriteLine($"Is ActionByObject an uoi: {uoi}");
-            Console.WriteLine(o["date"].Type);
+            //Console.WriteLine(o["date"].Type);
             sw.Stop();
             Console.WriteLine(sw.Elapsed);
-            Console.WriteLine(o.ToString());
+            Console.WriteLine(o.Value.ToString());
             //Console.WriteLine(r["Part"].ToString());
         }
     }
