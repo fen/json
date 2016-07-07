@@ -68,7 +68,7 @@ namespace Json {
         List<JPair> _pairs = new List<JPair>();
 
         public void Add(string key, JToken token) {
-            if (Contains(key) == true) {
+            if (ContainsKey(key) == true) {
                 throw new ArgumentException("An JPair with the same key already exists in the JObject");
             }
             _pairs.Add(new JPair(key, token));
@@ -85,9 +85,19 @@ namespace Json {
             return false;
         }
 
-        public bool Contains(string key) {
+        public bool ContainsKey(string key) {
             foreach (var pair in _pairs) {
                 if (pair.Key.Equals(key, StringComparison.Ordinal) == true) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public bool Remove(string key) {
+            for (int i = 0; i < _pairs.Count; i++) {
+                if (_pairs[i].Key.Equals(key, StringComparison.Ordinal) == true) {
+                    _pairs.RemoveAt(i);
                     return true;
                 }
             }
