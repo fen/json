@@ -4,11 +4,33 @@ using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 
 using static Json.JSONImpl;
 
 namespace Json {
+    public enum JType {
+        None,
+        Object,
+        Array,
+        Pair,
+        Null,
+        String,
+        Integer,
+        Double,
+        Boolean,
+        DateTime
+    }
+
     public abstract class JToken {
+        JType _type;
+
+        protected JToken(JType type) {
+            _type = type;
+        }
+
+        public JType Type => _type;
+
         public abstract void ToString(StringBuilder sb, int indent, out bool nl);
 
         public override string ToString() {
@@ -40,6 +62,9 @@ namespace Json {
     }
 
     public class JObject : JToken, IEnumerable<JPair> {
+        public JObject() : base(JType.Object) {
+        }
+
         List<JPair> _pairs = new List<JPair>();
 
         public void Add(string key, JToken token) {
@@ -154,6 +179,9 @@ namespace Json {
     }
 
     public class JArray : JToken, IEnumerable<JToken> {
+        public JArray() : base(JType.Array) {
+        }
+
         List<JToken> _elements = new List<JToken>();
 
         public void Add(JToken element) {
@@ -225,7 +253,7 @@ namespace Json {
     }
 
     public class JPair : JToken {
-        public JPair(string key, JToken value) {
+        public JPair(string key, JToken value) : base(JType.Pair) {
             Key = key;
             Value = value;
         }
@@ -240,13 +268,22 @@ namespace Json {
     }
 
     public class JValue : JToken {
-        public JValue(string value) {
+        public JValue() : base(JType.Null) {
+            Value = null;
+        }
+        public JValue(string value) : base(JType.String) {
             Value = value;
         }
-        public JValue(bool value) {
+        public JValue(bool value) : base(JType.Boolean) {
             Value = value;
         }
-        public JValue(object value) {
+        public JValue(int value) : base(JType.Integer) {
+            Value = value;
+        }
+        public JValue(double value) : base(JType.Double) {
+            Value = value;
+        }
+        public JValue(DateTime value) : base(JType.DateTime) {
             Value = value;
         }
 
@@ -273,6 +310,10 @@ namespace Json {
                     sb.Append("false");
                 }
             }
+            else if (Value is DateTime) {
+                sb.Append($"\"{((DateTime)Value).ToUniversalTime().ToString(IsoDateFormat)}\"");
+            }
+
             nl = true;
         }
 
@@ -302,8 +343,7 @@ namespace Json {
                         return TArray(reader, sb);
                     }
                     case '"': {
-                        TString(reader, sb);
-                        return new JValue(sb.ToString());
+                        return TStringOrDate(reader, sb);
                     }
                     case 't': {
                         c = reader.Read();
@@ -339,7 +379,7 @@ namespace Json {
                     }
                     case '-':
                     case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
-                        return new JValue(TNumber(reader, sb));
+                        return TNumber(reader, sb);
                     }
                     case '/': {
                         Comment(reader);
@@ -399,7 +439,7 @@ namespace Json {
             else return; // @TODO ERROR
         }
 
-        static object TNumber(TextReader reader, StringBuilder sb) {
+        static JValue TNumber(TextReader reader, StringBuilder sb) {
             sb.Clear();
 
             bool isFrac = false;
@@ -416,10 +456,10 @@ namespace Json {
                      c == (int)'e' || c == (int)'E' || c == (int)'-' || c == (int)'+' || c == (int)'.');
 
             if (isFrac) {
-                return double.Parse(sb.ToString());
+                return new JValue(double.Parse(sb.ToString()));
             }
             else {
-                return int.Parse(sb.ToString());
+                return new JValue(int.Parse(sb.ToString()));
             }
         }
 
@@ -492,13 +532,26 @@ namespace Json {
             return arr;
         }
 
+        public static JValue TStringOrDate(TextReader reader, StringBuilder sb) {
+            TString(reader, sb);
+
+            var str = sb.ToString();
+
+            DateTime dt;
+            if (TryParseDateTime(str, out dt) == true) {
+                return new JValue(dt);
+            }
+            else {
+                return new JValue(str);
+            }
+        }
+
         public static void TString(TextReader reader, StringBuilder sb) {
             sb.Clear();
 
             int c = reader.Peek();
             if (c != (int)'"') {
-                Console.WriteLine($"ERROR2 '{(char)c}'");
-                return;
+                return; // @TODO error
             }
 
             reader.Read(); // eat the "
@@ -509,5 +562,23 @@ namespace Json {
             }
         }
 
+        public const string IsoDateFormat = "yyyy-MM-ddTHH:mm:ss.FFFFFFFK";
+
+        static bool TryParseDateTime(string s, out DateTime dt)
+        {
+            if (s.Length > 0)
+            {
+                if (s.Length >= 19 && s.Length <= 40 && char.IsDigit(s[0]) && s[10] == 'T')
+                {
+                    if (DateTime.TryParseExact(s, IsoDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out dt))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            dt = default(DateTime);
+            return false;
+        }
     }
 }
