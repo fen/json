@@ -44,7 +44,7 @@ namespace Json {
 
         public void Add(string key, JToken token) {
             if (Contains(key) == true) {
-                return; // @TODO error
+                throw new ArgumentException("An JPair with the same key already exists in the JObject");
             }
             _pairs.Add(new JPair(key, token));
         }
