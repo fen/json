@@ -26,7 +26,11 @@ var arr = new JArray {
 Console.WriteLine(arr);
 ```
 
-JSON Specification:
+## Installation
+
+Take the [json.cs](json.cs) file and drop it into your project.
+
+## JSON Specification:
 
 ```
 object
@@ -96,3 +100,6 @@ e
     E+
     E-
 ```
+
+In addition to the JSON standard the library tries to by default parse ISO date
+formats out of text.

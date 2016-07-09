@@ -1,0 +1,37 @@
+{
+    /*
+    Multi line comment
+    */
+    // single line commment
+    "A": "hello world",
+    "B": true,
+    "C": false,
+    "D": null,
+    "E": {
+        "A.1": "foo",
+        "B.1": {}
+    },
+    "str": {
+        "A": "foo"
+    },
+    "num": {
+        "A": 42,
+        "B": 42.2,
+        "C": 1,
+        "D": 1e10,
+        "E": -42,
+        "F": -42.2
+    },
+    "arr": [
+        "str",
+        true,
+        false,
+        null,
+        {
+            "A": "foo"
+        }
+    ],
+    "values": {
+    },
+    "date": "2016-07-07T07:37:16.0008139Z"
+}
