@@ -12,6 +12,28 @@ namespace ConsoleApplication
     {
         public static void Main(string[] args)
         {
+            var arr = new JArray {
+                new JObject {
+                    ["id"] = "a",
+                    ["str"] = null,
+                    ["date"] = DateTime.UtcNow,
+                    ["int"] = int.MaxValue,
+                    ["double"] = double.MaxValue, 
+                    ["obj"] = new JObject {
+                        ["id"] = "b"
+                    }
+                }
+            };
+
+            Console.WriteLine(arr);
+
+            var arr2 = JArray.Parse(arr.ToString());
+            if (arr2.Failed) {
+                Console.WriteLine($"ERROR: {arr2.ErrorCode}");
+            }
+
+            return;
+
             var sw = new Stopwatch();
             sw.Start();
             var o = JObject.Parse(File.OpenRead("output.json"));

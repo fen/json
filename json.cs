@@ -45,7 +45,12 @@ namespace Json {
         }
 
         public static explicit operator bool(JToken v) => (bool)((JValue)v).Value;
-        public static explicit operator JToken(bool v) => new JValue(v);
+
+        public static implicit operator JToken(string v) => new JValue(v);
+        public static implicit operator JToken(bool v) => new JValue(v);
+        public static implicit operator JToken(int v) => new JValue(v);
+        public static implicit operator JToken(double v) => new JValue(v);
+        public static implicit operator JToken(DateTime v) => new JValue(v);
     }
 
     public class JObject : JToken, IEnumerable<JPair> {
@@ -59,6 +64,9 @@ namespace Json {
         public void Add(string key, JToken token) {
             if (ContainsKey(key) == true) {
                 throw new ArgumentException("An JPair with the same key already exists in the JObject");
+            }
+            if (token == null) {
+                token = new JValue();
             }
             _pairs.Add(new JPair(key, token));
         }
@@ -251,7 +259,7 @@ namespace Json {
         public JValue() : base(JType.Null) {
             Value = null;
         }
-        public JValue(string value) : base(JType.String) {
+        public JValue(string value) : base(value == null ? JType.Null : JType.String) {
             Value = value;
         }
         public JValue(bool value) : base(JType.Boolean) {
@@ -740,7 +748,7 @@ namespace Json {
                 w.Write(v.Value);
             }
             else if (v.Value is double) {
-                w.Write(v.Value);
+                w.Write(((double)v.Value).ToString("G17"));
             }
             else if (v.Value is bool) {
                 if ((bool)v.Value) {
