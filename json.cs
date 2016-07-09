@@ -31,13 +31,12 @@ namespace Json {
 
         public JType Type => _type;
 
-        public abstract void ToString(StringBuilder sb, int indent, out bool nl);
-
         public override string ToString() {
             var sb = new StringBuilder();
-            bool _;
-            ToString(sb, 0, out _); 
-            return sb.ToString();
+            using (var writer = new StringWriter(sb)) {
+                WriteJson(writer, this, true); 
+                return sb.ToString();
+            }
         }
 
         public virtual JToken this[object key] {
@@ -45,27 +44,17 @@ namespace Json {
             set { throw new NotImplementedException(); }
         }
 
-        protected static string Pad(int indent) {
-            if (indent == 0) return string.Empty;
-            else if (indent == 1) return "  ";
-            else if (indent == 2) return "    ";
-            else if (indent == 3) return "      ";
-            else if (indent == 4) return "        ";
-            else if (indent == 5) return "          ";
-            else if (indent == 6) return "            ";
-            else if (indent == 7) return "              ";
-            else return string.Empty.PadRight(indent * 2);
-        }
-
         public static explicit operator bool(JToken v) => (bool)((JValue)v).Value;
         public static explicit operator JToken(bool v) => new JValue(v);
     }
 
     public class JObject : JToken, IEnumerable<JPair> {
+        List<JPair> _pairs = new List<JPair>();
+
         public JObject() : base(JType.Object) {
         }
 
-        List<JPair> _pairs = new List<JPair>();
+        public int Count => _pairs.Count;
 
         public void Add(string key, JToken token) {
             if (ContainsKey(key) == true) {
@@ -102,6 +91,15 @@ namespace Json {
                 }
             }
             return false;
+        }
+
+        public JPair this[int i] {
+            get {
+                return _pairs[i];
+            }
+            set {
+                _pairs[i] = value;
+            }
         }
 
         public JToken this[string key] {
@@ -144,35 +142,14 @@ namespace Json {
             }
         }
 
+        public void Write(Stream stream, bool ws = false) {
+            var sw = new StreamWriter(stream);
+            WriteJson(sw, this, ws);
+            sw.Flush();
+        }
+
         public IEnumerator<JPair> GetEnumerator() => _pairs.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => _pairs.GetEnumerator();
-
-        public override void ToString(StringBuilder sb, int indent, out bool nl) {
-            sb.Append("{");
-            indent += 1;
-            bool writePad = false;
-            for (int i = 0; i < _pairs.Count; i++) {
-                if (i == 0) {
-                    sb.AppendLine();
-                    writePad = true;
-                }
-
-                sb.Append(Pad(indent));
-                bool newLine;
-                _pairs[i].ToString(sb, indent, out newLine);
-                if (i + 1 < _pairs.Count) {
-                    sb.Append(",");
-                    sb.AppendLine();
-                }
-                else {
-                    if (newLine) sb.AppendLine();
-                }
-            }
-            indent -= 1;
-            if (writePad) sb.Append(Pad(indent));
-            sb.Append("}");
-            nl = true;
-        }
 
         public static Result<JObject> Parse(string json) {
             using (var r = new StringReader(json)) {
@@ -228,35 +205,13 @@ namespace Json {
             }
         }
 
-        public override void ToString(StringBuilder sb, int indent, out bool nl) {
-            sb.Append("[");
-            indent += 1;
-            bool writePad = false;
-            for (int i = 0; i < _elements.Count; i++) {
-                if (i == 0) {
-                    sb.AppendLine();
-                    writePad = true;
-                }
-
-                sb.Append(Pad(indent));
-                bool newLine;
-                _elements[i].ToString(sb, indent, out newLine);
-                if (i + 1 < _elements.Count) {
-                    sb.Append(",");
-                    sb.AppendLine();
-                }
-                else {
-                    if (newLine) sb.AppendLine();
-                }
-            }
-            indent -= 1;
-            if (writePad) sb.Append(Pad(indent));
-            sb.Append("]");
-            nl = true;
-        }
-
         public IEnumerator<JToken> GetEnumerator() => _elements.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => _elements.GetEnumerator();
+
+        public void Write(Stream stream, bool ws = false) {
+            var sw = new StreamWriter(stream);
+            WriteJson(sw, this, ws);
+        }
 
         public static Result<JArray> Parse(string json) {
             using (var r = new StringReader(json)) {
@@ -290,11 +245,6 @@ namespace Json {
 
         public string Key;
         public JToken Value;
-
-        public override void ToString(StringBuilder sb, int indent, out bool nl) {
-            sb.Append($"\"{Key}\": ");
-            Value.ToString(sb, indent, out nl);
-        }
     }
 
     public class JValue : JToken {
@@ -318,34 +268,6 @@ namespace Json {
         }
 
         public object Value;
-
-        public override void ToString(StringBuilder sb, int indent, out bool nl) {
-            if (Value == null) {
-                sb.Append($"null");
-            }
-            if (Value is string) {
-                sb.Append($"\"{Value}\"");
-            }
-            else if (Value is int) {
-                sb.Append(Value);
-            }
-            else if (Value is double) {
-                sb.Append(Value);
-            }
-            else if (Value is bool) {
-                if ((bool)Value) {
-                    sb.Append("true");
-                }
-                else {
-                    sb.Append("false");
-                }
-            }
-            else if (Value is DateTime) {
-                sb.Append($"\"{((DateTime)Value).ToUniversalTime().ToString(IsoDateFormat)}\"");
-            }
-
-            nl = true;
-        }
 
         public static explicit operator double(JValue v) => (double)v.Value;
         public static explicit operator JValue(double v) => new JValue(v);
@@ -569,8 +491,16 @@ namespace Json {
             }
             else {
                 int value;
-                if (int.TryParse(sb.ToString(), out value) == false) {
-                    return JError.MalformedNumber;
+                string s = sb.ToString();
+                if (int.TryParse(s, out value) == false) {
+                    // we try to fallback on the double
+                    double d;
+                    if (double.TryParse(s, out d) == true) {
+                        return new JValue(d);
+                    }
+                    else {
+                        return JError.MalformedNumber;
+                    }
                 }
                 return new JValue(value);
             }
@@ -708,5 +638,139 @@ namespace Json {
             dt = default(DateTime);
             return false;
         }
+
+        // ----
+
+        public static void WriteJson(TextWriter w, JToken t, bool ws) {
+            bool _;
+            Write(w, t, ws, 0, out _);
+        }
+
+        static void Write(TextWriter w, JToken t, bool ws, int indent, out bool nl) {
+            nl = false;
+            switch (t.Type) {
+                case JType.Object:
+                    Write(w, (JObject)t, ws, indent, out nl);
+                break;
+                case JType.Array:
+                    Write(w, (JArray)t, ws, indent, out nl);
+                break;
+                case JType.Pair:
+                    Write(w, (JPair)t, ws, indent, out nl);
+                break;
+                case JType.Null:
+                case JType.String:
+                case JType.Integer:
+                case JType.Double:
+                case JType.Boolean:
+                case JType.DateTime:
+                    Write(w, (JValue)t, ws, indent, out nl);
+                break;
+            }
+        }
+
+        static void Write(TextWriter w, JObject o, bool ws, int indent, out bool nl) {
+            w.Write('{');
+            indent += 1;
+            bool writePad = false;
+            for (int i = 0; i < o.Count; i++) {
+                if (i == 0) {
+                    if (ws) w.WriteLine();
+                    writePad = true;
+                }
+
+                if (ws) w.Write(Pad(indent));
+                bool newLine;
+                Write(w, o[i], ws, indent, out newLine);
+                if (i + 1 < o.Count) {
+                    w.Write(',');
+                    if (ws) w.WriteLine();
+                }
+                else {
+                    if (newLine && ws) w.WriteLine();
+                }
+            }
+            indent -= 1;
+            if (writePad && ws) w.Write(Pad(indent));
+            w.Write('}');
+            nl = true;
+        }
+
+        static void Write(TextWriter w, JArray a, bool ws, int indent, out bool nl) {
+            w.Write('[');
+            indent += 1;
+            bool writePad = false;
+            for (int i = 0; i < a.Count; i++) {
+                if (i == 0) {
+                    if (ws) w.WriteLine();
+                    writePad = true;
+                }
+
+                if (ws) w.Write(Pad(indent));
+                bool newLine;
+                Write(w, a[i], ws, indent, out newLine);
+                if (i + 1 < a.Count) {
+                    w.Write(',');
+                    if (ws) w.WriteLine();
+                }
+                else {
+                    if (newLine && ws) w.WriteLine();
+                }
+            }
+            indent -= 1;
+            if (writePad && ws) w.Write(Pad(indent));
+            w.Write(']');
+            nl = true;
+        }
+
+        static void Write(TextWriter w, JPair p, bool ws, int indent, out bool nl) {
+            w.Write($"\"{p.Key}\":");
+            if (ws) w.Write(' ');
+            Write(w, p.Value, ws, indent, out nl);
+        }
+
+        static void Write(TextWriter w, JValue v, bool ws, int indent, out bool nl) {
+            if (v.Value == null) {
+                w.Write($"null");
+            }
+            if (v.Value is string) {
+                w.Write($"\"{v.Value}\"");
+            }
+            else if (v.Value is int) {
+                w.Write(v.Value);
+            }
+            else if (v.Value is double) {
+                w.Write(v.Value);
+            }
+            else if (v.Value is bool) {
+                if ((bool)v.Value) {
+                    w.Write("true");
+                }
+                else {
+                    w.Write("false");
+                }
+            }
+            else if (v.Value is DateTime) {
+                w.Write($"\"{((DateTime)v.Value).ToUniversalTime().ToString(IsoDateFormat)}\"");
+            }
+
+            nl = true;
+        }
+
+        static string Pad(int indent) {
+            if (indent == 0) return string.Empty;
+            else if (indent == 1) return "  ";
+            else if (indent == 2) return "    ";
+            else if (indent == 3) return "      ";
+            else if (indent == 4) return "        ";
+            else if (indent == 5) return "          ";
+            else if (indent == 6) return "            ";
+            else if (indent == 7) return "              ";
+            else if (indent == 8) return "                ";
+            else if (indent == 9) return "                  ";
+            else if (indent == 10) return "                    ";
+            else return string.Empty.PadRight(indent * 2);
+        }
+
     }
 }
