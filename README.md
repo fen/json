@@ -1,4 +1,4 @@
-# JSON .NET source library (POC)
+# [POC] JSON .NET source library
 
 This is a small .NET JSON source library with minimal dependencies. It's
 API is similar to Newtonsoft.Json.Linq. 
