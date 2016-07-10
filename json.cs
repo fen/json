@@ -31,6 +31,14 @@ namespace Json {
 
         public JType Type => _type;
 
+        public string ToString(bool ws) {
+            var sb = new StringBuilder();
+            using (var writer = new StringWriter(sb)) {
+                WriteJson(writer, this, ws); 
+                return sb.ToString();
+            }
+        }
+
         public override string ToString() {
             var sb = new StringBuilder();
             using (var writer = new StringWriter(sb)) {

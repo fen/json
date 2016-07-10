@@ -1,13 +1,11 @@
 # JSON .NET source library (POC)
 
-This is a small .NET JSON source library with minimal dependencies with a
-similar API to Newtonsoft.Json.Linq. 
-
-A source library is a source code file that you can drop into your project. The
-goal is doing the basic JSON operations, and small enought for someone to go in
-and add specific stuff.
+This is a small .NET JSON source library with minimal dependencies. It's
+API is similar to Newtonsoft.Json.Linq. 
 
 **NOTE** This is proof of concept code.
+
+## Example
 
 ```cs
 var arr = new JArray {
@@ -24,6 +22,22 @@ var arr = new JArray {
 };
 
 Console.WriteLine(arr);
+Console.WriteLine(arr.ToString(ws: false));
+
+using (var f = File.OpenWrite("output.json")) {
+    arr.Write(f);
+}
+
+var o = JObject.Parse("{ \"result\" : 42 }");
+if (o.Failed) {
+    // ERROR
+}
+using (var f = File.OpenRead("input.json")) {
+    o = JObject.Parse(f);
+    if (o.Failed) {
+        // ERROR
+    }
+}
 ```
 
 ## Installation
@@ -101,5 +115,11 @@ e
     E-
 ```
 
-In addition to the JSON standard the library tries to by default parse ISO date
-formats out of text.
+In addition to the JSON specification the library tries to parse ISO date formats
+(yyyy-MM-ddTHH:mm:ss.FFFFFFFK) out of text.
+
+## TODO
+
+* [ ] Add escape characters support in string parser
+* [ ] Implement test scenarios
+* [ ] Extend API if needed
