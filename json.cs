@@ -352,6 +352,8 @@ namespace Json {
         public const int ExpectedStringStartWithDoubleQuote = 8;
         public const int WasNotExpectedResultTypeJArray = 9;
         public const int WasNotExpectedResultTypeJObject = 10;
+        public const int InvalidHextCharacter = 11;
+        public const int UnknownEscapeCode = 12;
     }
 
     static class JSONImpl {
@@ -631,8 +633,78 @@ namespace Json {
             reader.Read(); // eat the "
             c = reader.Read();
             while (c != -1 && c != (int)'"') {
-                sb.Append((char)c);
-                c = reader.Read();
+                // espace codes
+                if (c == (int)'\\') {
+                    int peek = reader.Peek();
+                    switch (peek) {
+                        case '"':
+                            sb.Append('"');
+                            reader.Read();
+                        break;
+                        case '\\':
+                            sb.Append('\\');
+                            reader.Read();
+                        break;
+                        case '/':
+                            sb.Append('/');
+                            reader.Read();
+                        break;
+                        case 'b':
+                            sb.Append('\b');
+                            reader.Read();
+                        break;
+                        case 'f':
+                            sb.Append('\f');
+                            reader.Read();
+                        break;
+                        case 'n':
+                            sb.Append('\n');
+                            reader.Read();
+                        break;
+                        case 'r':
+                            sb.Append('\r');
+                            reader.Read();
+                        break;
+                        case 't':
+                            sb.Append('\t');
+                            reader.Read();
+                        break;
+                        case 'u': {
+                            reader.Read();
+                            int value = 0;
+                            for (int i = 0, j = 3; i < 4; i++, j--) {
+                                c = reader.Read();
+                                Console.WriteLine($"ch: {(char)c}");
+                                if (c == -1) {
+                                    break;
+                                }
+                                int n;
+                                if (c <= 57 && c >= 48) {
+                                    n = c - 48;
+                                }
+                                else if (c <= 70 && c >= 65) {
+                                    n = c - 55;
+                                }
+                                else if (c <= 102 && c >= 97) {
+                                    n = c - 87;
+                                }
+                                else {
+                                    return JError.InvalidHextCharacter;
+                                }
+                                value += n << j * 4; 
+                                Console.WriteLine($"{n} << {j*4} = {n << j*4}");
+                            }
+                            Console.WriteLine(value);
+                            sb.Append((char)value);
+                        }
+                        break;
+                        default: return JError.UnknownEscapeCode;
+                    }
+                }
+                else {
+                    sb.Append((char)c);
+                    c = reader.Read();
+                }
             }
 
             if (c == -1) return JError.UnexpectedEnd;
