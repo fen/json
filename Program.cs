@@ -12,6 +12,9 @@ namespace ConsoleApplication
     {
         public static void Main(string[] args)
         {
+            Console.WriteLine($"'{string.Empty.PadRight(2)}'");
+            //else return string.Empty.PadRight(indent * 2);
+        
             /*
             var arr = new JArray {
                 new JObject {

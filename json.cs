@@ -674,7 +674,6 @@ namespace Json {
                             int value = 0;
                             for (int i = 0, j = 3; i < 4; i++, j--) {
                                 c = reader.Read();
-                                Console.WriteLine($"ch: {(char)c}");
                                 if (c == -1) {
                                     break;
                                 }
@@ -692,9 +691,7 @@ namespace Json {
                                     return JError.InvalidHextCharacter;
                                 }
                                 value += n << j * 4; 
-                                Console.WriteLine($"{n} << {j*4} = {n << j*4}");
                             }
-                            Console.WriteLine(value);
                             sb.Append((char)value);
                         }
                         break;
@@ -857,6 +854,8 @@ namespace Json {
             else if (indent == 8) return "                ";
             else if (indent == 9) return "                  ";
             else if (indent == 10) return "                    ";
+            else if (indent == 11) return "                      ";
+            else if (indent == 12) return "                        ";
             else return string.Empty.PadRight(indent * 2);
         }
 
