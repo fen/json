@@ -1,9 +1,12 @@
-# [POC] JSON .NET source library
+# JSON .NET source library
 
-This is a small .NET JSON source library with minimal dependencies. It's
-API is similar to Newtonsoft.Json.Linq. 
+This is a small .NET JSON parser library, distributed as a single C# source
+file ([json.cs](json.cs)). It's API is similar to the Newtonsoft.Json.Linq
+JObject, JArray API.
 
-**NOTE** This is proof of concept code.
+This exists because I needed a lightweight library with minimal dependencies
+doing the essentials of JSON parsing. This is not a replacement for
+Newtonsoft.Json.
 
 ## Example
 
@@ -117,6 +120,15 @@ e
 
 In addition to the JSON specification the library tries to parse ISO date formats
 (yyyy-MM-ddTHH:mm:ss.FFFFFFFK) out of text.
+
+## LICENSE
+
+To the extent possible under law, the author(s) have **dedicated** all copyright
+and related and neighboring rights to this software to the public domain
+worldwide. This software is distributed without any warranty.
+
+You can copy, modify, distribute and perform the work, even for commercial
+purposes, all without asking permission. 
 
 ## TODO
 
