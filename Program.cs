@@ -12,9 +12,6 @@ namespace ConsoleApplication
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine($"'{string.Empty.PadRight(2)}'");
-            //else return string.Empty.PadRight(indent * 2);
-        
             /*
             var arr = new JArray {
                 new JObject {
@@ -41,7 +38,7 @@ namespace ConsoleApplication
 
             var sw = new Stopwatch();
             sw.Start();
-            var o = JObject.Parse(File.OpenRead("test.json"));
+            var o = JObject.Parse(File.OpenRead("citylots.json"));
             if (o.Failed) {
                 Console.WriteLine($"ERROR: {o.ErrorCode}");
             }
@@ -50,7 +47,7 @@ namespace ConsoleApplication
             //Console.WriteLine(o["date"].Type);
             sw.Stop();
             Console.WriteLine(sw.Elapsed);
-            Console.WriteLine(o.Value.ToString());
+            //Console.WriteLine(o.Value.ToString());
             /*sw.Reset();
             sw.Start();
             if (File.Exists("output.json") == true) {

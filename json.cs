@@ -309,6 +309,12 @@ namespace Json {
             return new Result<T>(result);
         }
 
+        public void ThrowIfFailed() {
+            if (Failed) {
+                throw new JException(_errorCode);
+            }
+        }
+
         public static implicit operator Result(int e) {
             return new Result(e);
         }
@@ -332,6 +338,12 @@ namespace Json {
 
         public bool Failed => _errorCode != 0;
 
+        public void ThrowIfFailed() {
+            if (Failed) {
+                throw new JException(_errorCode);
+            }
+        }
+
         public static implicit operator Result<T>(T value) {
             return new Result<T>(value);
         }
@@ -339,6 +351,19 @@ namespace Json {
         public static implicit operator Result<T>(int e) {
             return new Result<T>(e);
         }
+    }
+
+    public class JException : Exception {
+        int _errorCode;
+        public JException(int errorCode) : base(JError.ToMessage(errorCode)) {
+            _errorCode = errorCode;
+        }
+        public JException(string message) : base(message) {
+        }
+        public JException(string message, Exception inner) : base(message, inner) {
+        }
+
+        public int ErrorCode => _errorCode;
     }
 
     public static class JError {
@@ -354,6 +379,22 @@ namespace Json {
         public const int WasNotExpectedResultTypeJObject = 10;
         public const int InvalidHextCharacter = 11;
         public const int UnknownEscapeCode = 12;
+
+        public static string ToMessage(int errorCode) {
+            switch (errorCode) {
+                case ExpectedBoolTrue: return "Expected boolean token 'true'.";
+                case ExpectedBoolFalse: return "Expected boolean token 'false'.";
+                case ExpectedNull: return "Expected token null.";
+                case MalformedJson: return "Json is malformed can not parse.";
+                case MalformedNumber: return "No a valid Json number.";
+                case ExpectedJPairSepartor: return "Missing expected JPair separator.";
+                case WasNotExpectedResultTypeJArray: return "Was not of expected type JArray.";
+                case WasNotExpectedResultTypeJObject: return "Was not of expected type JObject.";
+                case InvalidHextCharacter: return "Invalid hex chracter.";
+                case UnknownEscapeCode: return "Unkown escape code.";
+                default: throw new NotImplementedException("Unknown error code");
+            }
+        }
     }
 
     static class JSONImpl {
