@@ -62,12 +62,12 @@ namespace Json {
     }
 
     public class JObject : JToken, IEnumerable<JPair> {
-        List<JPair> _pairs = new List<JPair>();
+        List<JPair> _mebers = new List<JPair>();
 
         public JObject() : base(JType.Object) {
         }
 
-        public int Count => _pairs.Count;
+        public int Count => _members.Count;
 
         public void Add(string key, JToken token) {
             if (ContainsKey(key) == true) {
@@ -76,11 +76,11 @@ namespace Json {
             if (token == null) {
                 token = new JValue();
             }
-            _pairs.Add(new JPair(key, token));
+            _members.Add(new JPair(key, token));
         }
 
         public bool TryGetValue(string key, out JToken value) {
-            foreach (var pair in _pairs) {
+            foreach (var pair in _mebers) {
                 if (pair.Key.Equals(key, StringComparison.Ordinal) == true) {
                     value = pair.Value;
                     return true;
@@ -91,7 +91,7 @@ namespace Json {
         }
 
         public bool ContainsKey(string key) {
-            foreach (var pair in _pairs) {
+            foreach (var pair in _members) {
                 if (pair.Key.Equals(key, StringComparison.Ordinal) == true) {
                     return true;
                 }
@@ -100,9 +100,9 @@ namespace Json {
         }
 
         public bool Remove(string key) {
-            for (int i = 0; i < _pairs.Count; i++) {
-                if (_pairs[i].Key.Equals(key, StringComparison.Ordinal) == true) {
-                    _pairs.RemoveAt(i);
+            for (int i = 0; i < _members.Count; i++) {
+                if (_members[i].Key.Equals(key, StringComparison.Ordinal) == true) {
+                    _members.RemoveAt(i);
                     return true;
                 }
             }
@@ -111,16 +111,16 @@ namespace Json {
 
         public JPair this[int i] {
             get {
-                return _pairs[i];
+                return _members[i];
             }
             set {
-                _pairs[i] = value;
+                _members[i] = value;
             }
         }
 
         public JToken this[string key] {
             get {
-                foreach (var pair in _pairs) {
+                foreach (var pair in _members) {
                     if (pair.Key.Equals(key, StringComparison.Ordinal) == true) {
                         return pair.Value;
                     }
@@ -128,7 +128,7 @@ namespace Json {
                 return null;
             }
             set {
-                foreach (var pair in _pairs) {
+                foreach (var pair in _members) {
                     if (pair.Key.Equals(key, StringComparison.Ordinal) == true) {
                         pair.Value = value;
                         return;
@@ -140,7 +140,7 @@ namespace Json {
 
         public override JToken this[object key] {
             get {
-                foreach (var pair in _pairs) {
+                foreach (var pair in _members) {
                     if (pair.Key.Equals((string)key, StringComparison.Ordinal) == true) {
                         return pair.Value;
                     }
@@ -148,7 +148,7 @@ namespace Json {
                 return null;
             }
             set {
-                foreach (var pair in _pairs) {
+                foreach (var pair in _members) {
                     if (pair.Key.Equals((string)key, StringComparison.Ordinal) == true) {
                         pair.Value = value;
                         return;
@@ -164,8 +164,8 @@ namespace Json {
             sw.Flush();
         }
 
-        public IEnumerator<JPair> GetEnumerator() => _pairs.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => _pairs.GetEnumerator();
+        public IEnumerator<JPair> GetEnumerator() => _members.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => _members.GetEnumerator();
 
         public static Result<JObject> Parse(string json) {
             using (var r = new StringReader(json)) {
