@@ -1,4 +1,4 @@
-# JSON .NET source library
+# .NET JSON parser source library
 
 This is a small .NET JSON parser library, distributed as a single C# source
 file ([json.cs](json.cs)). It's API is similar to the Newtonsoft.Json.Linq
@@ -134,6 +134,4 @@ purposes, all without asking permission.
 
 ## TODO
 
-* [ ] Add escape characters support in string parser
 * [ ] Implement test scenarios
-* [ ] Extend API if needed
