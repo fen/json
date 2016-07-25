@@ -118,8 +118,10 @@ e
     E-
 ```
 
-In addition to the JSON specification the library tries to parse ISO date formats
-(yyyy-MM-ddTHH:mm:ss.FFFFFFFK) out of text.
+In addition to the JSON specification the library tries to parse ISO date
+formats (yyyy-MM-ddTHH:mm:ss.FFFFFFFK) out of a JSON string and convert it into
+a System.DateTime. C like line (//) and multi line (/\*) comments are also
+supported.
 
 ## LICENSE
 

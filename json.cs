@@ -62,7 +62,7 @@ namespace Json {
     }
 
     public class JObject : JToken, IEnumerable<JPair> {
-        List<JPair> _mebers = new List<JPair>();
+        List<JPair> _members = new List<JPair>();
 
         public JObject() : base(JType.Object) {
         }
@@ -80,7 +80,7 @@ namespace Json {
         }
 
         public bool TryGetValue(string key, out JToken value) {
-            foreach (var pair in _mebers) {
+            foreach (var pair in _members) {
                 if (pair.Key.Equals(key, StringComparison.Ordinal) == true) {
                     value = pair.Value;
                     return true;
@@ -293,6 +293,10 @@ namespace Json {
 
         public static explicit operator bool(JValue v) => (bool)v.Value;
         public static explicit operator JValue(bool v) => new JValue(v);
+
+        public override string ToString() {
+            return Value.ToString();
+        }
     }
 
     public struct Result {
@@ -899,6 +903,5 @@ namespace Json {
             else if (indent == 12) return "                        ";
             else return string.Empty.PadRight(indent * 2);
         }
-
     }
 }
