@@ -68,7 +68,7 @@ with two additions.
    out of JSON strings (if dates are not important to you it is recomented to
    remove this from the json.cs file because it has some impact on
    performance).
-2. C like line (`//`) and mulit line (`/\*`) comments are supported and handeled as
+2. C like line (`//`) and mulit line (`/*`) comments are supported and handeled as
    white space.
 
 Other additions are out of scope for this implementation and should be handled
