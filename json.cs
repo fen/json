@@ -1,3 +1,14 @@
+// 
+// json.cs .NET JSON source library
+// VERSION: 0.1.0
+// DATE:    2016-07-27
+//
+// LICENSE:
+// To the extent possible under law, the author(s) have dedicated all copyright
+// and related and neighboring rights to this software to the public domain
+// worldwide. This software is distributed without any warranty.
+//
+
 using System;
 using System.IO;
 using System.Text;
