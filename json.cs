@@ -22,6 +22,37 @@ namespace Json {
         DateTime
     }
 
+    public static class JError {
+        public const int ExpectedBoolTrue = 1;
+        public const int ExpectedBoolFalse = 2;
+        public const int ExpectedNull= 3;
+        public const int MalformedJson = 4;
+        public const int MalformedNumber = 5;
+        public const int ExpectedJPairSepartor = 6;
+        public const int UnexpectedEnd = 7;
+        public const int ExpectedStringStartWithDoubleQuote = 8;
+        public const int WasNotExpectedResultTypeJArray = 9;
+        public const int WasNotExpectedResultTypeJObject = 10;
+        public const int InvalidHextCharacter = 11;
+        public const int UnknownEscapeCode = 12;
+
+        public static string ToMessage(int errorCode) {
+            switch (errorCode) {
+                case ExpectedBoolTrue: return "Expected boolean token 'true'.";
+                case ExpectedBoolFalse: return "Expected boolean token 'false'.";
+                case ExpectedNull: return "Expected token null.";
+                case MalformedJson: return "Json is malformed can not parse.";
+                case MalformedNumber: return "No a valid Json number.";
+                case ExpectedJPairSepartor: return "Missing expected JPair separator.";
+                case WasNotExpectedResultTypeJArray: return "Was not of expected type JArray.";
+                case WasNotExpectedResultTypeJObject: return "Was not of expected type JObject.";
+                case InvalidHextCharacter: return "Invalid hex chracter.";
+                case UnknownEscapeCode: return "Unkown escape code.";
+                default: throw new NotImplementedException("Unknown error code");
+            }
+        }
+    }
+
     public abstract class JToken {
         JType _type;
 
@@ -299,64 +330,6 @@ namespace Json {
         }
     }
 
-    public struct Result {
-        public static Result Success = new Result(0);
-        int _errorCode;
-        public Result(int errorCode) {
-            _errorCode = errorCode;
-        }
-
-        public int ErrorCode => _errorCode;
-        public bool Failed => _errorCode != 0;
-
-        public Result<T> Ok<T>(T result) {
-            return new Result<T>(result);
-        }
-
-        public void ThrowIfFailed() {
-            if (Failed) {
-                throw new JException(_errorCode);
-            }
-        }
-
-        public static implicit operator Result(int e) {
-            return new Result(e);
-        }
-    }
-
-    public struct Result<T> {
-        T _value;
-        int _errorCode;
-        public Result(T value) {
-            _value = value;
-            _errorCode = 0;
-        }
-        public Result(int errorCode) {
-            _value = default(T);
-            _errorCode = errorCode;
-        }
-
-        public T Value => _value;
-
-        public int ErrorCode => _errorCode;
-
-        public bool Failed => _errorCode != 0;
-
-        public void ThrowIfFailed() {
-            if (Failed) {
-                throw new JException(_errorCode);
-            }
-        }
-
-        public static implicit operator Result<T>(T value) {
-            return new Result<T>(value);
-        }
-
-        public static implicit operator Result<T>(int e) {
-            return new Result<T>(e);
-        }
-    }
-
     public class JException : Exception {
         int _errorCode;
         public JException(int errorCode) : base(JError.ToMessage(errorCode)) {
@@ -368,37 +341,6 @@ namespace Json {
         }
 
         public int ErrorCode => _errorCode;
-    }
-
-    public static class JError {
-        public const int ExpectedBoolTrue = 1;
-        public const int ExpectedBoolFalse = 2;
-        public const int ExpectedNull= 3;
-        public const int MalformedJson = 4;
-        public const int MalformedNumber = 5;
-        public const int ExpectedJPairSepartor = 6;
-        public const int UnexpectedEnd = 7;
-        public const int ExpectedStringStartWithDoubleQuote = 8;
-        public const int WasNotExpectedResultTypeJArray = 9;
-        public const int WasNotExpectedResultTypeJObject = 10;
-        public const int InvalidHextCharacter = 11;
-        public const int UnknownEscapeCode = 12;
-
-        public static string ToMessage(int errorCode) {
-            switch (errorCode) {
-                case ExpectedBoolTrue: return "Expected boolean token 'true'.";
-                case ExpectedBoolFalse: return "Expected boolean token 'false'.";
-                case ExpectedNull: return "Expected token null.";
-                case MalformedJson: return "Json is malformed can not parse.";
-                case MalformedNumber: return "No a valid Json number.";
-                case ExpectedJPairSepartor: return "Missing expected JPair separator.";
-                case WasNotExpectedResultTypeJArray: return "Was not of expected type JArray.";
-                case WasNotExpectedResultTypeJObject: return "Was not of expected type JObject.";
-                case InvalidHextCharacter: return "Invalid hex chracter.";
-                case UnknownEscapeCode: return "Unkown escape code.";
-                default: throw new NotImplementedException("Unknown error code");
-            }
-        }
     }
 
     static class JSONImpl {
@@ -902,6 +844,64 @@ namespace Json {
             else if (indent == 11) return "                      ";
             else if (indent == 12) return "                        ";
             else return string.Empty.PadRight(indent * 2);
+        }
+    }
+
+    public struct Result {
+        public static Result Success = new Result(0);
+        int _errorCode;
+        public Result(int errorCode) {
+            _errorCode = errorCode;
+        }
+
+        public int ErrorCode => _errorCode;
+        public bool Failed => _errorCode != 0;
+
+        public Result<T> Ok<T>(T result) {
+            return new Result<T>(result);
+        }
+
+        public void ThrowIfFailed() {
+            if (Failed) {
+                throw new JException(_errorCode);
+            }
+        }
+
+        public static implicit operator Result(int e) {
+            return new Result(e);
+        }
+    }
+
+    public struct Result<T> {
+        T _value;
+        int _errorCode;
+        public Result(T value) {
+            _value = value;
+            _errorCode = 0;
+        }
+        public Result(int errorCode) {
+            _value = default(T);
+            _errorCode = errorCode;
+        }
+
+        public T Value => _value;
+
+        public int ErrorCode => _errorCode;
+
+        public bool Failed => _errorCode != 0;
+
+        public void ThrowIfFailed() {
+            if (Failed) {
+                throw new JException(_errorCode);
+            }
+        }
+
+        public static implicit operator Result<T>(T value) {
+            return new Result<T>(value);
+        }
+
+        public static implicit operator Result<T>(int e) {
+            return new Result<T>(e);
         }
     }
 }
