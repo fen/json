@@ -8,7 +8,7 @@ This exists because I needed a lightweight library with minimal dependencies
 doing the essentials of JSON parsing. This is not a replacement for
 Newtonsoft.Json.
 
-This library is built for the CoreCLR in C# 6 syntax (develop on Linux) but
+This library is built for the CoreCLR with C# 6 syntax (develop on Linux) but
 should work on other CLR implementations.
 
 ## Example
@@ -61,14 +61,14 @@ Take the [json.cs](json.cs) file and drop it into your project.
 
 ## JSON Specification:
 
-The implementation is following the (JSON specification)[http://www.json.org)
+The implementation is following the [JSON specification](http://www.json.org)
 with two additions.
 
-1. The library tries to parse ISO date formats (yyyy-MM-ddTHH:mm:ss.FFFFFFFK)
+1. The library tries to parse ISO date formats (`yyyy-MM-ddTHH:mm:ss.FFFFFFFK`)
    out of JSON strings (if dates are not important to you it is recomented to
    remove this from the json.cs file because it has some impact on
    performance).
-2. C like line (//) and mulit line (/\*) comments are supported and handeled as
+2. C like line (`//`) and mulit line (`/\*`) comments are supported and handeled as
    white space.
 
 Other additions are out of scope for this implementation and should be handled
