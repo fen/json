@@ -1,5 +1,5 @@
 // 
-// json.cs .NET JSON source library
+// json.cs .NET JSON parser source library
 // VERSION: 0.1.0
 // DATE:    2016-07-27
 //
