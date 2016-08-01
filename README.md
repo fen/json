@@ -8,8 +8,8 @@ This exists because I needed a lightweight library with minimal dependencies
 doing the essentials of JSON parsing. This is not a replacement for
 Newtonsoft.Json.
 
-This library is built for the CoreCLR with C# 6 syntax (develop on Linux) but
-should work on other CLR implementations.
+This library is built for the CoreCLR with C# 6 syntax but should work on other
+CLR implementations.
 
 ## Example
 
