@@ -150,7 +150,3 @@ worldwide. This software is distributed without any warranty.
 
 You can copy, modify, distribute and perform the work, even for commercial
 purposes, all without asking permission. 
-
-## TODO
-
-* [ ] Implement test scenarios
